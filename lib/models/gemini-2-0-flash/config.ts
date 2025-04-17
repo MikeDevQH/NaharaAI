@@ -7,7 +7,7 @@ export const gemini20FlashConfig: ModelConfig = {
   displayName: "Gemini 2.0 Flash",
   welcomeMessage: 
   `
-¡Hola! Soy asistente, tu asistente de IA potenciado por Gemini 2.0 Flash. Puedes preguntarme lo que quieras: desde dudas técnicas hasta ideas creativas o ayuda con código.
+¡Hola! Soy Nahara, tu asistente de IA potenciado por Gemini 2.0 Flash. Puedes preguntarme lo que quieras: desde dudas técnicas hasta ideas creativas o ayuda con código.
   `,
   apiEndpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
   capabilities: {
