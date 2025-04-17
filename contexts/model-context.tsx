@@ -1,11 +1,11 @@
 "use client"
 
 import { createContext, useContext, useState, type ReactNode } from "react"
-import { gemini20FlashConfig } from "@/lib/models"
+import { gemini20FlashConfig, gemini15FlashConfig } from "@/lib/models"
 import type { ModelConfig } from "@/types/model"
 
 // Define available models
-export const availableModels: ModelConfig[] = [gemini20FlashConfig]
+export const availableModels: ModelConfig[] = [gemini20FlashConfig, gemini15FlashConfig]
 
 // Type for the context
 type ModelContextType = {
