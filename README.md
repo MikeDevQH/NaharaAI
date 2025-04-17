@@ -27,7 +27,7 @@ Una aplicación web moderna de chat impulsada por inteligencia artificial, const
 
 1. **Clona el repositorio:**
    ```bash
-   git clone <URL-del-repo>
+   git clone https://github.com/MikeDevQH/NaharaAI.git
    cd chat-ia
    ```
 
