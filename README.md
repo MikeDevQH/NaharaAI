@@ -1,4 +1,4 @@
-# Chat IA Gemini
+# Nahara AI
 
 Una aplicación web moderna de chat impulsada por inteligencia artificial, construida con Next.js, React y TailwindCSS, que utiliza la API de Gemini para respuestas inteligentes y conversacionales.
 
