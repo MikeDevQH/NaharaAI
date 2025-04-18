@@ -32,6 +32,12 @@ body {
     &::-webkit-scrollbar-thumb:hover {
       opacity: 0.9;
     }
+    .custom-ring {
+      box-shadow: 0 0 0 4px transparent, 0 0 0 6px rgba(0, 0, 0, 0.2); /* sombra base */
+      background-image: linear-gradient(to right, #3b82f6, #60a5fa, #9333ea); /* gradiente */
+      -webkit-mask-image: linear-gradient(to right, #3b82f6, #60a5fa, #9333ea); /* máscara para mostrar el gradiente */
+      mask-image: linear-gradient(to right, #3b82f6, #60a5fa, #9333ea);
+    }
 }
 
 
