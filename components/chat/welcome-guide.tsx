@@ -7,6 +7,7 @@ import { useModel } from "@/contexts/model-context"
 // WelcomeGuide component
 export function WelcomeGuide() {
   const { selectedModel } = useModel()
+  const iconAI = <img src="/NaharaAI-512x512.png" alt="Logo Nahara AI" className="bg-gradient-to-r from-indigo-100 to-blue-100 text-blue-700 border-blue-200 dark:from-blue-900 dark:to-indigo-900 dark:text-blue-300 dark:border-blue-800 mx-auto mb-2 w-20 h-20 rounded-md " />
 
   return (
     <motion.div
@@ -26,7 +27,7 @@ export function WelcomeGuide() {
             ease: "easeInOut",
           }}
         >
-          <BotIcon className="mx-auto mb-4 text-blue-500 dark:text-blue-400" size={48} />
+          {iconAI}
         </motion.div>
         <p className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">{selectedModel.welcomeMessage}</p>
         <p className="text-sm text-blue-600 dark:text-blue-400 mt-4">
