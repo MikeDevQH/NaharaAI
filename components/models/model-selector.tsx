@@ -1,17 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Check, ChevronDown } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
-import { useModel } from "@/contexts/model-context"
-import { availableModels } from "@/lib/models"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Check, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { useModel } from "@/contexts/model-context";
+import { availableModels } from "@/lib/models";
 
-// ModelSelector component
-export function ModelSelector() {
-  const [isOpen, setIsOpen] = useState(false)
-  const { selectedModel, setSelectedModel } = useModel()
+// 👇 Nuevo: Prop para disparar un reset externo
+interface ModelSelectorProps {
+  onModelChange?: () => void;
+}
+
+export function ModelSelector({ onModelChange }: ModelSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { selectedModel, setSelectedModel } = useModel();
+
+  const handleModelChange = (modelId: string) => {
+    if (modelId === selectedModel.id) {
+      setIsOpen(false);
+      return;
+    }
+
+    setSelectedModel(modelId); // actualiza el modelo globalmente
+    setIsOpen(false);
+
+    // 👇 Llama a resetChat si se provee
+    if (onModelChange) onModelChange();
+  };
 
   return (
     <div className="relative">
@@ -25,7 +42,10 @@ export function ModelSelector() {
           <span className="w-2 h-2 rounded-full bg-green-500"></span>
           {selectedModel.name}
         </span>
-        <ChevronDown size={16} className={cn("transition-transform", isOpen ? "rotate-180" : "")} />
+        <ChevronDown
+          size={16}
+          className={cn("transition-transform", isOpen ? "rotate-180" : "")}
+        />
       </Button>
 
       <AnimatePresence>
@@ -41,22 +61,26 @@ export function ModelSelector() {
               {availableModels.map((model) => (
                 <button
                   key={model.id}
-                  onClick={() => {
-                    setSelectedModel(model.id)
-                    setIsOpen(false)
-                  }}
+                  onClick={() => handleModelChange(model.id)}
                   className={cn(
                     "flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30",
                     selectedModel.id === model.id
                       ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                      : "text-gray-700 dark:text-gray-300",
+                      : "text-gray-700 dark:text-gray-300"
                   )}
                 >
                   <div className="flex-1">
                     <div className="font-medium">{model.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{model.description}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {model.description}
+                    </div>
                   </div>
-                  {selectedModel.id === model.id && <Check size={16} className="text-blue-600 dark:text-blue-400" />}
+                  {selectedModel.id === model.id && (
+                    <Check
+                      size={16}
+                      className="text-blue-600 dark:text-blue-400"
+                    />
+                  )}
                 </button>
               ))}
             </div>
@@ -64,5 +88,5 @@ export function ModelSelector() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
