@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion"
 // NOTE: Internal component that manages chat animation and reset
 function ChatContainer() {
   const [key, setKey] = useState(0)
-  const { selectedModel } = useModel()
+  const { selectedModel, setGeneratedTitle } = useModel()
   const [previousModelId, setPreviousModelId] = useState("")
 
   // NOTE: Reset chat when the selected model changes
@@ -25,6 +25,7 @@ function ChatContainer() {
   // NOTE: Handler to manually reset the chat
   const resetChat = () => {
     setKey((prev) => prev + 1)
+    setGeneratedTitle(null)
   }
 
   // NOTE: Animation variants for page transitions
