@@ -27,7 +27,6 @@ export function ChatInput({ input, setInput, handleSubmit, isLoading }: ChatInpu
         placeholder="Escribe tu mensaje..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        disabled={isLoading}
         className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-blue-200 dark:border-blue-900 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 transition-all duration-300 shadow-sm"
       />
       <motion.div
