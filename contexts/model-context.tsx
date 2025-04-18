@@ -11,6 +11,8 @@ export const availableModels: ModelConfig[] = [gemini20FlashConfig, gemini15Flas
 type ModelContextType = {
   selectedModel: ModelConfig
   setSelectedModel: (modelId: string) => void
+  generatedTitle: string | null
+  setGeneratedTitle: (title: string | null) => void
 }
 
 // Create the context
@@ -19,13 +21,24 @@ const ModelContext = createContext<ModelContextType | undefined>(undefined)
 // Provider of the context
 export function ModelProvider({ children }: { children: ReactNode }) {
   const [selectedModel, setSelectedModelState] = useState<ModelConfig>(availableModels[0])
+  const [generatedTitle, setGeneratedTitle] = useState<string | null>(null)
 
   const setSelectedModel = (modelId: string) => {
     const model = availableModels.find((m) => m.id === modelId) || availableModels[0]
     setSelectedModelState(model)
+    setGeneratedTitle("Nuevo Chat")
   }
 
-  return <ModelContext.Provider value={{ selectedModel, setSelectedModel }}>{children}</ModelContext.Provider>
+  return (
+    <ModelContext.Provider value={{
+      selectedModel,
+      setSelectedModel,
+      generatedTitle,
+      setGeneratedTitle
+    }}>
+      {children}
+    </ModelContext.Provider>
+  )  
 }
 
 // Custom hook to use the context

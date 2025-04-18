@@ -20,4 +20,5 @@ export interface ModelConfig {
     [key: string]: any
   }
   systemPrompt: string
+  supportsTitleGeneration?: boolean
 }
