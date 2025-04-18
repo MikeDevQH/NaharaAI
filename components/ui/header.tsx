@@ -29,7 +29,7 @@ export function Header({ onReset }: HeaderProps) {
         </motion.h1>
 
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-2">
-          <ModelSelector />
+        <ModelSelector onModelChange={onReset} />
 
           <div className="flex items-center gap-2">
             <motion.div
