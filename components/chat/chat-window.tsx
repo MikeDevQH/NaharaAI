@@ -116,7 +116,7 @@ export function ChatWindow() {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="h-[calc(100vh-8rem)]"
     >
-      <Card className="h-full flex flex-col bg-gradient-to-br from-white/80 to-blue-50/90 dark:from-gray-900/90 dark:to-blue-950/80 backdrop-blur-md border-blue-200 dark:border-blue-900 shadow-xl transition-colors duration-300">
+      <Card className=" h-full flex flex-col bg-gradient-to-br from-white/80 to-blue-50/90 dark:from-gray-900/90 dark:to-blue-950/80 backdrop-blur-md border-blue-200 dark:border-blue-900 shadow-xl transition-colors duration-300">
         <CardHeader className="bg-gradient-to-r from-blue-700 to-indigo-600 dark:from-blue-900 dark:to-indigo-800 text-white rounded-t-lg transition-colors duration-300 flex-shrink-0">
           <CardTitle>
             {generatedTitle || `Nuevo chat`}
@@ -131,7 +131,7 @@ export function ChatWindow() {
 
         <CardContent
           ref={contentRef}
-          className="flex-1 overflow-hidden p-0 relative"
+          className="flex-1 h-full min-h-0 flex flex-col overflow-hidden p-0 relative"
           style={{ minHeight: "0" }}
         >
           <MessageList
