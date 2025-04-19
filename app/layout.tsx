@@ -16,24 +16,25 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://nahara-ai.vercel.app',
-    siteName: 'Nahara AI',
-    title: 'Nahara AI',
-    description: 'Chat with multiple AI models. Creativity, code help, and more.',
+    siteName: 'Nahara AI – AI Chat Assistant',
+    title: 'Nahara AI – Chat with Creative and Coding Assistants',
+    description: 'Talk to different AI models in a beautiful interface. Creativity, code help, and more.',
     images: [
       {
-        url: '/NaharaAI-Banner.png',
+        url: '/NaharaAI-Banner.jpg',
+        secureUrl: 'https://nahara-ai.vercel.app/NaharaAI-Banner.jpg',
         width: 1200,
         height: 630,
-        alt: 'Nahara AI Banner - Chat with different AI models',
+        alt: 'Nahara AI Banner – Talk to AI',
       },
     ],
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: 'Nahara AI',
-    description: 'Your creative and coding AI assistant.',
-    images: ['/NaharaAI-Banner.png'],
+    title: 'Nahara AI – Talk with smart AI models for creativity and code',
+    description: 'Explore multiple AI models for coding, creative writing, and more – all in one place.',
+    images: ['/NaharaAI-Banner.jpg'],
   },
 }
 
@@ -45,6 +46,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+      <meta name="p:domain_verify" content="ce61a73510bda5204b8975bdebf7d5bf"/>
+      </head>
       <body>{children}</body>
     </html>
   )
