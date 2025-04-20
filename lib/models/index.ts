@@ -1,5 +1,5 @@
 import { gemini20FlashConfig } from "@/lib/models/gemini-2-0-flash/config"
-import { gemini15FlashConfig } from "./gemini-1-5-flash/config"
+import { gemini15FlashConfig } from "./gemini-1-5-pro/config"
 import type { ModelConfig } from "@/types/model"
 
 // Export available models
