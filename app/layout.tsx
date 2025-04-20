@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { ThemeProvider } from '@/contexts/theme-context'
 
 export const metadata: Metadata = {
   title: 'Nahara AI',
@@ -45,11 +46,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning >
       <head>
       <meta name="p:domain_verify" content="ce61a73510bda5204b8975bdebf7d5bf"/>
       </head>
-      <body>{children}</body>
+      <body>
+      <ThemeProvider>
+      {children}
+      </ThemeProvider>
+      </body>
     </html>
   )
 }
+
