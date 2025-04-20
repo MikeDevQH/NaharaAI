@@ -1,28 +1,30 @@
 import type { Message } from "@/types/chat"
 
+// This function generates a brief and descriptive title summarizing the main topic of the conversation
 export async function generateTitleForGemini(messages: Message[]): Promise<string> {
   const prompt = `
-Dado el siguiente historial de conversación entre un usuario y una IA, genera un título breve y descriptivo que resuma el tema principal. Sé claro, creativo, no uses comillas y el titulo debe ser corto. No repitas "Conversación con Nahara" ni cosas similares.
+Given the following conversation history between a user and an AI, generate a brief and descriptive title that summarizes the main topic. Be clear, creative, do not use quotes, and the title should be short. Do not repeat phrases like "Conversation with Nahara" or similar.
 
-Historial:
-${messages.map((msg) => `${msg.role === "user" ? "Usuario" : "Nahara"}: ${msg.content}`).join("\n")}
+Conversation history:
+${messages.map((msg) => `${msg.role === "user" ? "User" : "Nahara"}: ${msg.content}`).join("\n")}
 
-Título:
+Title:
   `.trim()
 
+  // Sending the prompt to the chat API with the model "gemini-2.0-flash"
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      messages: [{ role: "user", content: prompt }],
-      model: "gemini-1.5-flash",
+      messages: [{ role: "user", content: prompt }],  
+      model: "gemini-2.0-flash",  
     }),
   })
 
-  const data = await response.json()
-  if (!data.text) throw new Error("No se pudo generar el título")
 
+  const data = await response.json()
+  if (!data.text) throw new Error("Unable to generate title")
   return data.text.trim()
 }
