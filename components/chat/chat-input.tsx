@@ -24,7 +24,7 @@ export function ChatInput({ input, setInput, handleSubmit, isLoading }: ChatInpu
       transition={{ duration: 0.3 }}
     >
       <Input
-        placeholder="Escribe tu mensaje..."
+        placeholder="Type your message..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
         className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-blue-200 dark:border-blue-900 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 transition-all duration-300 shadow-sm"
@@ -40,7 +40,7 @@ export function ChatInput({ input, setInput, handleSubmit, isLoading }: ChatInpu
           className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-300 shadow-md"
         >
           <SendIcon className="h-4 w-4" />
-          <span className="sr-only">Enviar</span>
+          <span className="sr-only">Send</span>
         </Button>
       </motion.div>
     </motion.form>

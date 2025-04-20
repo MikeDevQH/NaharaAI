@@ -7,18 +7,18 @@ export async function POST(request: Request) {
     const { messages, model: modelId = "gemini-2.0-flash" } = await request.json()
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: "Se requiere un array de mensajes" }, { status: 400 })
+      return NextResponse.json({ error: "An array of messages is required" }, { status: 400 })
     }
 
     if (!messages.some((msg) => msg.role === "user")) {
-      return NextResponse.json({ error: "Se requiere al menos un mensaje del usuario" }, { status: 400 })
+      return NextResponse.json({ error: "At least one user message is required" }, { status: 400 })
     }
 
     const modelConfig = getModelById(modelId)
     const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user")
 
     if (!lastUserMessage) {
-      throw new Error("No se encontró un mensaje del usuario")
+      throw new Error("No user message found")
     }
 
     const conversationHistory = messages
@@ -29,10 +29,12 @@ export async function POST(request: Request) {
       }))
 
     const userContent = lastUserMessage.content
-    const enhancedContent = `${modelConfig.systemPrompt}\n\nUsuario: ${userContent}`
+    const enhancedContent = `${modelConfig.systemPrompt}
+
+User: ${userContent}`
 
     const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) throw new Error("Falta la API Key de Gemini")
+    if (!apiKey) throw new Error("Gemini API Key is missing")
 
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({
@@ -51,24 +53,26 @@ export async function POST(request: Request) {
     })
 
     const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) throw new Error("La respuesta no contiene texto")
+    if (!text) throw new Error("Response does not contain text")
 
     return NextResponse.json({ text })
   } catch (modelError) {
-    console.error("Error específico del modelo:", modelError)
+    console.error("Model-specific error:", modelError)
 
     try {
       const { messages, model: modelId = "gemini-2.0-flash" } = await request.json()
       const fallbackModelConfig = getFallbackModel(modelId)
 
       const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user")
-      if (!lastUserMessage) throw new Error("No se encontró un mensaje del usuario")
+      if (!lastUserMessage) throw new Error("No user message found")
 
       const userContent = lastUserMessage.content
-      const enhancedContent = `${fallbackModelConfig.systemPrompt}\n\nUsuario: ${userContent}`
+      const enhancedContent = `${fallbackModelConfig.systemPrompt}
+
+User: ${userContent}`
 
       const apiKey = process.env.GEMINI_API_KEY
-      if (!apiKey) throw new Error("Falta la API Key de Gemini")
+      if (!apiKey) throw new Error("Gemini API Key is missing")
 
       const genAI = new GoogleGenerativeAI(apiKey)
       const model = genAI.getGenerativeModel({
@@ -86,18 +90,15 @@ export async function POST(request: Request) {
       })
 
       const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text
-      if (!text) throw new Error("La respuesta de fallback no contiene texto")
+      if (!text) throw new Error("Fallback response does not contain text")
 
       return NextResponse.json({
         text,
-        warning: `Se utilizó el modelo de respaldo ${fallbackModelConfig.name} porque el modelo original falló.`,
+        warning: `The fallback model ${fallbackModelConfig.name} was used because the original model failed.`,
       })
     } catch (fallbackError) {
-      console.error("Error en modelo alternativo:", fallbackError)
-      return NextResponse.json(
-        { error: "No se pudo generar respuesta con ningún modelo disponible" },
-        { status: 500 },
-      )
+      console.error("Fallback model error:", fallbackError)
+      return NextResponse.json({ error: "Could not generate response with any available model" }, { status: 500 })
     }
   }
 }

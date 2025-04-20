@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useModel } from "@/contexts/model-context"
 
-
 // TODO: Add props interface
 interface ChatMessageProps {
   message: Message
@@ -17,8 +16,8 @@ interface ChatMessageProps {
 export default function ChatMessage({ message, index }: ChatMessageProps) {
   const isUser = message.role === "user"
   const { selectedModel } = useModel()
-  const iconAI = <img src="/NaharaAI.png" alt="Logo Nahara AI" className="w-7 h-7 rounded-full " />
-  
+  const iconAI = <img src="/NaharaAI.png" alt="Nahara AI Logo" className="w-7 h-7 rounded-full " />
+
   return (
     <motion.div
       className="flex items-start gap-3"
@@ -38,9 +37,7 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
       </div>
       <div className="flex-1">
         <div className="space-y-2">
-          <div className="text-sm font-bold text-blue-800 dark:text-blue-300">
-            {isUser ? "Tú" : "Nahara"}
-          </div>
+          <div className="text-sm font-bold text-blue-800 dark:text-blue-300">{isUser ? "You" : "Nahara"}</div>
           <div className="text-blue-900 dark:text-blue-100 whitespace-pre-wrap bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-blue-100 dark:border-blue-900">
             {message.content}
           </div>
