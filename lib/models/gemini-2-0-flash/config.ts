@@ -12,8 +12,8 @@ Hello! I'm Nahara, your AI assistant powered by Gemini 2.0 Flash. You can ask me
   apiEndpoint: "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
   capabilities: {
     text: true,
-    images: false,
-    documents: false,
+    images: true,
+    documents: true,
     code: true,
   },
   generationConfig: {
