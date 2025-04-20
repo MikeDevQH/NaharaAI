@@ -5,6 +5,7 @@ import type { Message } from "@/types/chat"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useModel } from "@/contexts/model-context"
+import ReactMarkdown from "react-markdown"
 
 // TODO: Add props interface
 interface ChatMessageProps {
@@ -39,7 +40,7 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
         <div className="space-y-2">
           <div className="text-sm font-bold text-blue-800 dark:text-blue-300">{isUser ? "You" : "Nahara"}</div>
           <div className="text-blue-900 dark:text-blue-100 whitespace-pre-wrap bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-blue-100 dark:border-blue-900">
-            {message.content}
+            <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         </div>
       </div>
