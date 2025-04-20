@@ -1,14 +1,56 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { useTheme } from "@/contexts/theme-context"
+import { useEffect, useRef, useState } from "react"
 
 // AnimatedBackground component
 export function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { theme } = useTheme()
+  const [theme, setTheme] = useState<string>("light")
 
-  // TODO: Add props interface
+  // Detect current theme from system or localStorage
+  useEffect(() => {
+    // Check theme saved in localStorage
+    const savedTheme = localStorage.getItem("theme") || "light"
+    setTheme(savedTheme)
+
+    // Listen for theme changes
+    const handleStorageChange = () => {
+      const currentTheme = localStorage.getItem("theme") || "light"
+      setTheme(currentTheme)
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+
+    // Also check if document has 'dark' class
+    const checkDarkMode = () => {
+      if (document.documentElement.classList.contains("dark")) {
+        setTheme("dark")
+      } else {
+        setTheme("light")
+      }
+    }
+
+    // Check initially
+    checkDarkMode()
+
+    // Set up a mutation observer to detect changes to the 'dark' class
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "attributes" && mutation.attributeName === "class") {
+          checkDarkMode()
+        }
+      })
+    })
+
+    observer.observe(document.documentElement, { attributes: true })
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      observer.disconnect()
+    }
+  }, [])
+
+  // Animation effect for the background
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
