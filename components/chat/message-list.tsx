@@ -18,7 +18,7 @@ export function MessageList({ messages, isLoading, messagesEndRef }: MessageList
 
   const iconAI = <img src="/NaharaAI.png" alt="Logo Nahara AI" className="w-7 h-7 rounded-full" />
 
-  // Scroll automático al fondo cuando cambian los mensajes
+  // Auto-scroll to bottom  
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
@@ -35,14 +35,12 @@ export function MessageList({ messages, isLoading, messagesEndRef }: MessageList
       }`}
     >
       {showMessages ? (
-  messages.map((message, index) => (
-    <ChatMessage key={message.id} message={message} index={index} />
-  ))
-) : (
-  <div className="flex flex-1 h-full p-6 items-center justify-center">
-    <WelcomeGuide />
-  </div>
-)}
+        messages.map((message, index) => <ChatMessage key={message.id} message={message} index={index} />)
+      ) : (
+        <div className="flex flex-1 h-full p-6 items-center justify-center">
+          <WelcomeGuide />
+        </div>
+      )}
 
       {isLoading && (
         <motion.div
@@ -62,7 +60,7 @@ export function MessageList({ messages, isLoading, messagesEndRef }: MessageList
         </motion.div>
       )}
 
-      {/* Punto de referencia para scroll automático */}
+      {/* Reference point for auto-scroll */}
       <div ref={messagesEndRef} />
     </div>
   )

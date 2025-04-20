@@ -1,7 +1,4 @@
 "use client"
-
-import { RefreshCwIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { GithubLink } from "@/components/ui/github-link"
 import { motion } from "framer-motion"
@@ -12,7 +9,7 @@ interface HeaderProps {
   onReset: () => void
 }
 
-// Header component
+// Modify Header component
 export function Header({ onReset }: HeaderProps) {
 
   return (
@@ -24,12 +21,12 @@ export function Header({ onReset }: HeaderProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <img src="/NaharaAI.png" alt="Logo Nahara AI" className="w-10 h-10 mr-2  rounded-full" />
+          <img src="/NaharaAI.png" alt="Nahara AI Logo" className="w-10 h-10 mr-2  rounded-full" />
           Nahara AI
         </motion.h1>
 
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-2">
-        <ModelSelector onModelChange={onReset} />
+          <ModelSelector onModelChange={onReset} />
 
           <div className="flex items-center gap-2">
             <motion.div
@@ -37,15 +34,6 @@ export function Header({ onReset }: HeaderProps) {
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-white border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50 transition-all duration-300"
-                onClick={onReset}
-              >
-                <RefreshCwIcon className="mr-2" size={16} />
-                Reiniciar
-              </Button>
             </motion.div>
             <ThemeToggle />
             <GithubLink />
