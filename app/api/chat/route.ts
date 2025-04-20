@@ -23,39 +23,84 @@ export async function POST(request: Request) {
 
     const conversationHistory = messages
       .filter((msg) => msg.id !== lastUserMessage.id)
-      .map((msg) => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }],
-      }))
+      .map((msg) => {
+        const parts = [];
+        if (msg.image && msg.image.base64 && msg.image.mimeType) {
+          parts.push({
+            inlineData: {
+              mimeType: msg.image.mimeType,
+              data: msg.image.base64,
+            },
+          });
+        }
+        if (msg.content) {
+          parts.push({ text: msg.content });
+        }
+        return {
+          role: msg.role === "user" ? "user" : "model",
+          parts,
+        };
+      });
 
-    const userContent = lastUserMessage.content
-    const enhancedContent = `${modelConfig.systemPrompt}
+    const userParts = [];
+    if (lastUserMessage.image && lastUserMessage.image.base64 && lastUserMessage.image.mimeType) {
+      userParts.push({
+        inlineData: {
+          mimeType: lastUserMessage.image.mimeType,
+          data: lastUserMessage.image.base64,
+        },
+      });
+    }
+    if (lastUserMessage.content) {
+      userParts.push({ text: lastUserMessage.content });
+    }
 
-User: ${userContent}`
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("Gemini API Key is missing");
 
-    const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) throw new Error("Gemini API Key is missing")
-
-    const genAI = new GoogleGenerativeAI(apiKey)
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: modelConfig.id,
       generationConfig: modelConfig.generationConfig,
-    })
+    });
+
+    // Prompt for bounding boxes if image is present and user asks for detection
+    let prompt = lastUserMessage.content;
+    let isDetection = false;
+    if (lastUserMessage.image && /box|detect|object|segment|mask|cuadro|diferencias|diferente|bounding|segmenta|segmentation/i.test(prompt)) {
+      prompt = `${prompt}\nDetect the all of the prominent items in the image. The box_2d should be [ymin, xmin, ymax, xmax] normalized to 0-1000.`;
+      isDetection = true;
+    }
+    if (lastUserMessage.image && /segment|mask|segmenta|segmentación|contorno/i.test(prompt)) {
+      prompt = `Give the segmentation masks for the objects. Output a JSON list of segmentation masks where each entry contains the 2D bounding box in the key \"box_2d\", the segmentation mask in key \"mask\", and the text label in the key \"label\". Use descriptive labels.\n${prompt}`;
+      isDetection = true;
+    }
 
     const result = await model.generateContent({
       contents: [
         ...conversationHistory,
         {
           role: "user",
-          parts: [{ text: enhancedContent }],
+          parts: [
+            ...(lastUserMessage.image && lastUserMessage.image.base64 && lastUserMessage.image.mimeType
+              ? [{
+                  inlineData: {
+                    mimeType: lastUserMessage.image.mimeType,
+                    data: lastUserMessage.image.base64,
+                  },
+                }]
+              : []),
+            { text: prompt },
+          ],
         },
       ],
-    })
+    });
 
-    const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) throw new Error("Response does not contain text")
+    const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error("Response does not contain text");
 
-    return NextResponse.json({ text })
+    // Optionally, parse bounding boxes or masks from the response if present
+    return NextResponse.json({ text });
   } catch (modelError) {
     console.error("Model-specific error:", modelError)
 
