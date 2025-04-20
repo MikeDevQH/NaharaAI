@@ -15,6 +15,6 @@ export function getModelById(id: string): ModelConfig {
 
 // Function to get a fallback model
 export function getFallbackModel(currentModelId: string): ModelConfig {
-  if (currentModelId === gemini20FlashConfig.id) return gemini15FlashConfig
-  return gemini15FlashConfig
+  if (currentModelId === gemini20FlashConfig.id) return gemini15ProConfig
+  return gemini15ProConfig
 }
