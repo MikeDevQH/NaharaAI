@@ -40,6 +40,13 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
         <div className="space-y-2">
           <div className="text-sm font-bold text-blue-800 dark:text-blue-300">{isUser ? "You" : "Nahara"}</div>
           <div className="text-blue-900 dark:text-blue-100 whitespace-pre-wrap bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-blue-100 dark:border-blue-900">
+            {message.image && message.image.base64 && message.image.mimeType && (
+              <img
+                src={`data:${message.image.mimeType};base64,${message.image.base64}`}
+                alt="User upload"
+                className="mb-2 rounded max-w-xs max-h-60 object-contain border border-blue-200 dark:border-blue-800 shadow"
+              />
+            )}
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         </div>

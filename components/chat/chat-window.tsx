@@ -57,22 +57,44 @@ export function ChatWindow() {
     }
   }, [generatedTitle, currentConversation, updateConversationTitle])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading || !currentConversation) return
+  const handleSubmit = async (e: React.FormEvent, imageFile?: File | null) => {
+    e.preventDefault();
+    if ((!input.trim() && !imageFile) || isLoading || !currentConversation) return;
 
-    setError(null)
+    setError(null);
+
+    let imageData = null;
+    if (imageFile) {
+      // Convert image to base64
+      imageData = await new Promise<{ base64: string; mimeType: string }>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64 = result.split(",")[1];
+          resolve({ base64, mimeType: imageFile.type });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(imageFile);
+      });
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       content: input,
       role: "user",
-    }
+      image: imageData
+        ? {
+            id: Date.now().toString(),
+            base64: imageData.base64,
+            mimeType: imageData.mimeType,
+          }
+        : undefined,
+    };
 
-    const updatedMessages = [...messages, userMessage]
-    updateConversationMessages(updatedMessages)
-    setInput("")
-    setIsLoading(true)
+    const updatedMessages = [...messages, userMessage];
+    updateConversationMessages(updatedMessages);
+    setInput("");
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/chat", {
@@ -82,37 +104,38 @@ export function ChatWindow() {
           messages: updatedMessages,
           model: selectedModel.id,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || "Error communicating with API")
-      if (!data.text) throw new Error("Response does not contain text")
+      if (!response.ok) throw new Error(data.error || "Error communicating with API");
+      if (!data.text) throw new Error("Response does not contain text");
 
       const assistantMessage: Message = {
         id: Date.now().toString(),
         content: data.text,
         role: "assistant",
-      }
+        image: data.image || undefined,
+      };
 
-      updateConversationMessages([...updatedMessages, assistantMessage])
+      updateConversationMessages([...updatedMessages, assistantMessage]);
     } catch (error) {
-      console.error("Error:", error)
+      console.error("Error:", error);
 
-      const errorMessage = error instanceof Error ? error.message : "Unknown error"
-      setError(errorMessage)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setError(errorMessage);
 
       const errorResponse: Message = {
         id: Date.now().toString(),
         content: "Sorry, an error has occurred. Please try again.",
         role: "assistant",
-      }
+      };
 
-      updateConversationMessages([...updatedMessages, errorResponse])
+      updateConversationMessages([...updatedMessages, errorResponse]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div
