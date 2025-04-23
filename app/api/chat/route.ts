@@ -127,7 +127,7 @@ User: ${userContent}`;
                   },
                 ]
               : []),
-            { text: prompt },
+            { text: enhancedContent },
           ],
         },
       ],
