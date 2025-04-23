@@ -12,13 +12,13 @@ Hello! I'm Nahara, your AI assistant powered by Gemini 2.0 Flash. You can ask me
   apiEndpoint: "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
   capabilities: {
     text: true,
-    images: false,
-    documents: false,
+    images: true,
+    documents: true,
     code: true,
   },
   generationConfig: {
-    temperature: 0.7,
-    maxOutputTokens: 1024,
+    temperature: 0.6,
+    maxOutputTokens: 4000,
   },
   systemPrompt: `
 System Instructions: 
@@ -32,6 +32,7 @@ If you don't know the answer to something, clearly indicate that instead of maki
 If the user wants to use another model, tell them to select it in the top right.
 Don't repeatedly greet or introduce yourself unless asked.
 Use emojis but not excessively and be friendly with your responses.
+Use MD language for your responses.
 
 If the user writes or mentions phrases like "info Nahara", respond with information about yourself, your capabilities, and the project, in the same language the user is using.
 

@@ -41,13 +41,13 @@ export function Footer() {
 
   return (
     <footer
-      className={`w-full bg-gradient-to-r from-blue-800/90 via-blue-700/90 to-indigo-600/90 dark:from-blue-950/90 dark:via-blue-900/90 dark:to-indigo-800/90 backdrop-blur-md text-white py-2 px-4 shadow-lg z-10 mt-auto border-t border-blue-500/30 dark:border-blue-700/30`}
+      className={`w-full bg-gradient-to-r from-blue-900/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-md text-white py-1 px-4 shadow-md z-10 border-t border-blue-800/30`}
     >
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           {/* Logo and copyright */}
           <div className="flex items-center space-x-2">
-            <img src="/NaharaAI.png" alt="Logo Nahara AI" className="w-5 h-5 rounded-full" />
+            <img src="/NaharaAI.png" alt="Logo Nahara AI" className="w-4 h-4 rounded-full" />
             <p className="font-medium">© {currentYear} Nahara AI</p>
           </div>
 
@@ -85,7 +85,7 @@ export function Footer() {
             whileHover={{ scale: 1.05 }}
             onClick={() => setShowEasterEgg(!showEasterEgg)}
           >
-            <span className="text-blue-200 dark:text-blue-300">Thank you for using Nahara</span>
+            <span className="text-blue-200">Thank you for using Nahara</span>
             <motion.span
               animate={{
                 rotate: showEasterEgg ? [0, 15, -15, 15, 0] : 0,

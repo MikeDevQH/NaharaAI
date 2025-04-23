@@ -1,5 +1,10 @@
+import type { ChatImage } from "@/types/image";
+
 export interface Message {
-  id: string
-  content: string
-  role: "user" | "assistant"
+  images(images: any): unknown;
+  id: string;
+  content: string;
+  role: "user" | "assistant";
+  image?: ChatImage;
 }
+
