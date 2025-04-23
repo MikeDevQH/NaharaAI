@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/contexts/theme-context'
+import { Analytics } from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
   title: 'Nahara AI',
@@ -53,6 +54,7 @@ export default function RootLayout({
       <body>
       <ThemeProvider>
       {children}
+      <Analytics/>
       </ThemeProvider>
       </body>
     </html>
