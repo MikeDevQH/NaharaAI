@@ -9,7 +9,7 @@ export function WelcomeGuide() {
     <img
       src="/NaharaAI-512x512.png"
       alt="Nahara AI Logo"
-      className="bg-gradient-to-r from-indigo-100 to-blue-100 text-blue-700 border-blue-200 dark:from-blue-900 dark:to-indigo-900 dark:text-blue-300 dark:border-blue-800 mx-auto mb-2 w-20 h-20 rounded-md "
+      className="bg-gradient-to-r from-indigo-100 to-blue-100 text-blue-700 border-blue-200 dark:from-blue-900 dark:to-indigo-900 dark:text-blue-300 dark:border-blue-800 mx-auto mb-4 w-24 h-24 rounded-2xl shadow-md"
     />
   )
 
@@ -20,7 +20,7 @@ export function WelcomeGuide() {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="text-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-blue-100 dark:border-blue-900">
+      <div className="text-center max-w-md mx-auto p-8 rounded-2xl">
         <motion.div
           initial={{ y: -20 }}
           animate={{ y: 0 }}
@@ -33,8 +33,8 @@ export function WelcomeGuide() {
         >
           {iconAI}
         </motion.div>
-        <p className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">{selectedModel.welcomeMessage}</p>
-        <p className="text-sm text-blue-600 dark:text-blue-400 mt-4">
+        <p className="text-xl font-medium text-blue-700 dark:text-blue-300 mb-4">{selectedModel.welcomeMessage}</p>
+        <p className="text-sm text-blue-600 dark:text-blue-400 mt-6">
           Want to know more about me, the app, or its development? Type: "info Nahara" 👇
         </p>
       </div>
