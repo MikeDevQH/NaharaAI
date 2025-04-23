@@ -2,17 +2,24 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageList } from "./message-list"
 import { ChatInput } from "./chat-input"
 import type { Message } from "@/types/chat"
-import { motion } from "framer-motion"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, PanelLeftOpen } from "lucide-react"
 import { useModel } from "@/contexts/model-context"
 import { useConversation } from "@/contexts/conversation-context"
 import { generateTitleForGemini } from "@/lib/models/title"
+import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { GithubLink } from "@/components/ui/github-link"
+import { ModelSelector } from "@/components/models/model-selector"
 
-export function ChatWindow() {
+interface ChatWindowProps {
+  isSidebarOpen: boolean
+  setIsSidebarOpen: (isOpen: boolean) => void
+}
+
+export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps) {
   const { selectedModel, generatedTitle, setGeneratedTitle } = useModel()
   const { currentConversation, updateConversationMessages, updateConversationTitle } = useConversation()
   const [input, setInput] = useState("")
@@ -50,32 +57,48 @@ export function ChatWindow() {
     }
   }, [messages, currentConversation, selectedModel, updateConversationTitle, setGeneratedTitle])
 
-  // Sync generated title with conversation title
-  useEffect(() => {
-    if (generatedTitle && currentConversation && currentConversation.title !== generatedTitle) {
-      updateConversationTitle(currentConversation.id, generatedTitle)
-    }
-  }, [generatedTitle, currentConversation, updateConversationTitle])
+  const handleSubmit = async (e: React.FormEvent, imageFiles?: File[] | null) => {
+    e.preventDefault()
+    if ((!input.trim() && !imageFiles?.length) || isLoading || !currentConversation) return
 
-  const handleSubmit = async (e: React.FormEvent, imageFile?: File | null) => {
-    e.preventDefault();
-    if ((!input.trim() && !imageFile) || isLoading || !currentConversation) return;
+    setError(null)
 
-    setError(null);
+    let imageData = null
+    let imagesData = null
 
-    let imageData = null;
-    if (imageFile) {
-      // Convert image to base64
+    if (imageFiles && imageFiles.length === 1) {
+      // NOTE: Maintain compatibility with the previous format for a single image
+      const file = imageFiles[0]
       imageData = await new Promise<{ base64: string; mimeType: string }>((resolve, reject) => {
-        const reader = new FileReader();
+        const reader = new FileReader()
         reader.onload = () => {
-          const result = reader.result as string;
-          const base64 = result.split(",")[1];
-          resolve({ base64, mimeType: imageFile.type });
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(imageFile);
-      });
+          const result = reader.result as string
+          const base64 = result.split(",")[1]
+          resolve({ base64, mimeType: file.type })
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+    } else if (imageFiles && imageFiles.length > 1) {
+      // NOTE: Process multiple images
+      imagesData = await Promise.all(
+        imageFiles.map(async (file) => {
+          return new Promise<{ id: string; base64: string; mimeType: string }>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => {
+              const result = reader.result as string
+              const base64 = result.split(",")[1]
+              resolve({
+                id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+                base64,
+                mimeType: file.type,
+              })
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          })
+        }),
+      )
     }
 
     const userMessage: Message = {
@@ -89,84 +112,115 @@ export function ChatWindow() {
             mimeType: imageData.mimeType,
           }
         : undefined,
-    };
+      images: imagesData || undefined,
+    }
 
-    const updatedMessages = [...messages, userMessage];
-    updateConversationMessages(updatedMessages);
-    setInput("");
-    setIsLoading(true);
+    const updatedMessages = [...messages, userMessage]
+    updateConversationMessages(updatedMessages)
+    setInput("")
+    setIsLoading(true)
 
     try {
+      // NOTE: Prepare messages for the API
+      const apiMessages = updatedMessages.map((msg) => {
+        // NOTE: If the message has multiple images, convert them to the format expected by the API
+        if (msg.images && msg.images.length > 0) {
+          return {
+            ...msg,
+            // NOTE: Convert the array of images to a format that the API can handle
+            image: msg.images[0], // Currently, only the first image is used for compatibility
+          }
+        }
+        return msg
+      })
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: updatedMessages,
+          messages: apiMessages,
           model: selectedModel.id,
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
-      if (!response.ok) throw new Error(data.error || "Error communicating with API");
-      if (!data.text) throw new Error("Response does not contain text");
+      if (!response.ok) throw new Error(data.error || "Error communicating with API")
+      if (!data.text) throw new Error("Response does not contain text")
 
       const assistantMessage: Message = {
         id: Date.now().toString(),
         content: data.text,
         role: "assistant",
         image: data.image || undefined,
-      };
+      }
 
-      updateConversationMessages([...updatedMessages, assistantMessage]);
+      updateConversationMessages([...updatedMessages, assistantMessage])
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error:", error)
 
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      setError(errorMessage);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error"
+      setError(errorMessage)
 
       const errorResponse: Message = {
         id: Date.now().toString(),
-        content: "Sorry, an error has occurred. Please try again.",
+        content: "Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.",
         role: "assistant",
-      };
+      }
 
-      updateConversationMessages([...updatedMessages, errorResponse]);
+      updateConversationMessages([...updatedMessages, errorResponse])
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="h-[calc(100vh-10rem)]" // Adjusted for smaller footer
-    >
-      <Card className="h-full flex flex-col bg-gradient-to-br from-white/80 to-blue-50/90 dark:from-gray-900/90 dark:to-blue-950/80 backdrop-blur-md border-blue-200 dark:border-blue-900 shadow-xl transition-colors duration-300">
-        <CardHeader className="bg-gradient-to-r from-blue-700 to-indigo-600 dark:from-blue-900 dark:to-indigo-800 text-white rounded-t-lg transition-colors duration-300 flex-shrink-0">
-          <CardTitle>{currentConversation?.title || generatedTitle || "New chat"}</CardTitle>
-          {error && (
-            <div className="mt-2 bg-red-500/20 backdrop-blur-sm border border-red-500/50 text-white p-3 rounded-md flex items-center text-sm">
-              <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-              <p>{error}</p>
-            </div>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="bg-transparent backdrop-blur-md text-blue-800 dark:text-white p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          {!isSidebarOpen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen(true)}
+              className="mr-3 h-8 w-8 p-0 text-blue-600 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-800/20"
+            >
+            <PanelLeftOpen className="h-5 w-5 scale-125" />
+
+            </Button>
           )}
-        </CardHeader>
+          <h1 className="text-xl font-semibold text-blue-700 dark:text-blue-300">
+            {currentConversation?.title || generatedTitle || "New Chat"}
+          </h1>
+        </div>
 
-        <CardContent
-          ref={contentRef}
-          className="flex-1 h-full min-h-0 flex flex-col overflow-hidden p-0 relative"
-          style={{ minHeight: "0" }}
-        >
-          <MessageList messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
-        </CardContent>
+        <div className="flex items-center gap-2">
+          <ModelSelector onModelChange={() => {}} />
+          <ThemeToggle />
+          <GithubLink />
+        </div>
+      </div>
 
-        <CardFooter className="border-t border-blue-100 dark:border-blue-900 p-4 bg-blue-50/50 dark:bg-blue-950/50 transition-colors duration-300 flex-shrink-0">
+      {/* Error message if any */}
+      {error && (
+        <div className="mt-2 mx-4 bg-red-500/20 backdrop-blur-sm border border-red-500/50 text-white p-3 rounded-md flex items-center text-sm">
+          <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* Messages */}
+      <div ref={contentRef} className="flex-1 overflow-hidden relative">
+        <MessageList messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-2 flex justify-center mb-0">
+        <div className="w-full max-w-4xl mx-auto">
           <ChatInput input={input} setInput={setInput} handleSubmit={handleSubmit} isLoading={isLoading} />
-        </CardFooter>
-      </Card>
-    </motion.div>
+        </div>
+      </div>
+    </div>
   )
 }
