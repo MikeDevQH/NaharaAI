@@ -15,31 +15,42 @@
 
 ---
 
-## 📋 Tabla de Contenidos
-- [Descripción](#-descripción)
-- [Características](#-características)
-- [Tecnologías](#-tecnologías)
-- [Contacto](#-contacto)
-- [Licencia y Derechos](#-derechos-reservados)
+## 📖 Tabla de Contenidos
+
+- [Descripción](#descripción)  
+- [Características](#características)  
+- [Tecnologías](#tecnologías)  
+- [Estructura del Proyecto](#estructura-del-proyecto)  
+- [Instalación y Puesta en Marcha](#instalación-y-puesta-en-marcha)  
+- [Uso](#uso)  
+- [Variables de Entorno](#variables-de-entorno)  
+- [Scripts Disponibles](#scripts-disponibles)  
+- [Cómo Contribuir](#cómo-contribuir)  
+- [Licencia](#licencia)  
+- [Futuras Mejoras](#futuras-mejoras)  
 
 ---
 
-## 🚀 Descripción
+## 📄 Descripción
 
-**Nahara AI** es una plataforma web que permite a los usuarios interactuar con una IA avanzada (Gemini de Google) en tiempo real. Ofrece una experiencia de usuario fluida, soporte para temas claro/oscuro, selección de modelo y una interfaz responsiva y moderna.
+**Nahara AI Chat** es una plataforma conversacional que:
+
+- Permite chatear con modelos de IA de Google Gemini para obtener respuestas en lenguaje natural.  
+- Detecta automáticamente si el usuario solicita una imagen y redirige la petición al modelo de generación de imágenes.  
+- Muestra respuestas de texto e imágenes en la misma interfaz, con opción a descarga directa.  
+- Mantiene un diseño limpio, oscuro/claro, y una experiencia móvil optimizada.
 
 ---
 
 ## ✨ Características
 
-- ⚡️ Respuestas instantáneas
-- 🌐 Soporte multilingüe inteligente (texto)
-- 👨‍💻 Asistencia de código y depuración
-- 🏷️ Títulos automáticos para conversaciones
-- 🌓 Tema claro/oscuro
-- 🔄 Selección de modelos Gemini
-- 📱 UI moderna, responsiva y animada
-- ⭐ Testimonios y sección "Cómo funciona"
+- **Chat de texto libre**: Interactúa con modelos `gemini-2.0-flash` o `gemini-1.5-flash`.  
+- **Detección automática de imágenes**: Si tu prompt describe una escena, un objeto o un concepto visual, se genera una imagen en línea.  
+- **Selector de modelo**: Cambia entre distintos modelos según tu necesidad (texto, imágenes).  
+- **Descarga de imágenes**: Haz clic y guarda la imagen generada.  
+- **Interfaz modular**: Componentes reutilizables (ChatInput, MessageList, ChatMessage, ModelSelector, Footer).  
+- **Dark & Light Mode**: Ajustes automáticos según tu sistema o selección manual.  
+- **Landing “Acerca de”**: Página estática con información sobre Nahara y su propósito.  
 
 ---
 
@@ -55,6 +66,39 @@
 - [Gemini API (Google)](https://ai.google.dev/)
 
 ---
+
+## 🚀 Uso
+
+- Ve a la página principal y escribe tu prompt en el chat.  
+- Selecciona el modelo deseado desde el menú superior (texto vs. imagen).  
+- Si tu prompt es visual (“Dibuja un paisaje al atardecer…”), automáticamente se generará una imagen.  
+- Haz clic derecho (o botón de descarga) sobre la imagen para guardarla.  
+- Cambia al modo claro/oscuro desde el footer o ajustes del sistema.
+
+---
+
+## 🤝 Cómo Contribuir
+
+1. Haz un **fork** del proyecto.  
+2. Crea una rama para tu feature/fix: `git checkout -b feature/nueva-cosa`.  
+3. Realiza tus cambios y haz **commit** con mensajes claros.  
+4. Abre un **Pull Request** explicando tu contribución.  
+
+¡Todas las mejoras, correcciones de bugs y sugerencias son bienvenidas!
+
+---
+
+## 🌟 Futuras Mejoras
+
+- **Nuevos modelos**: generación de video, audio, documentos, razonamiento en cadena (chain-of-thought)…  
+- **Edición de imágenes**: subir tu propia foto y editar con IA.  
+- **Historial de chat**: guardar conversaciones en local o en la nube.  
+- **Plugins**: integraciones con servicios externos (Google Docs, Spotify, calendarios…).  
+- **Internacionalización**: soporte para múltiples idiomas.  
+- **Despliegue automático**: plantilla para Vercel, Netlify o Docker.
+
+---
+
 
 ## 📬 Contacto
 
@@ -78,5 +122,8 @@ Sí está permitido:
 🔒 **Uso no autorizado = infracción de derechos de autor.**
 
 ---
+
+¡Gracias por usar **Nahara AI Chat**! 🚀  
+Si tienes preguntas, abre un issue o escríbeme directamente.
 
 **¡Contribuciones, sugerencias y mejoras son bienvenidas!**
