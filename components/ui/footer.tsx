@@ -41,7 +41,7 @@ export function Footer() {
 
   return (
     <footer
-      className={`w-full bg-gradient-to-r from-blue-900/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-md text-white py-1 px-4 shadow-md z-10 border-t border-blue-800/30`}
+      className={`w-full bg-gradient-to-r from-blue-900/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-md text-white py-1 px-2 md:px-4 shadow-md z-10 border-t border-blue-800/30 fixed bottom-0 left-0 right-0 h-8`}
     >
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -52,7 +52,7 @@ export function Footer() {
           </div>
 
           {/* Central links */}
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-1 md:gap-3">
             <Link
               href="https://github.com/MikeDevQH/NaharaAI-Chat.git"
               target="_blank"
@@ -81,7 +81,7 @@ export function Footer() {
 
           {/* Creative phrase and easter egg */}
           <motion.p
-            className="flex items-center cursor-pointer"
+            className="hidden sm:flex items-center cursor-pointer"
             whileHover={{ scale: 1.05 }}
             onClick={() => setShowEasterEgg(!showEasterEgg)}
           >

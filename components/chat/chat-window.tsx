@@ -177,25 +177,24 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-transparent backdrop-blur-md text-blue-800 dark:text-white p-4 flex items-center justify-between">
-        <div className="flex items-center">
+      <div className="bg-transparent backdrop-blur-md text-blue-800 dark:text-white p-2 md:p-4 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center mb-2 md:mb-0">
           {!isSidebarOpen && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsSidebarOpen(true)}
-              className="mr-3 h-8 w-8 p-0 text-blue-600 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-800/20"
+              className="mr-3 h-8 w-8 p-0 text-blue-600 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-800/20 flex-shrink-0"
             >
-            <PanelLeftOpen className="h-5 w-5 scale-125" />
-
+              <PanelLeftOpen className="h-5 w-5 scale-125" />
             </Button>
           )}
-          <h1 className="text-xl font-semibold text-blue-700 dark:text-blue-300">
+          <h1 className="text-xl font-semibold text-blue-700 dark:text-blue-300 truncate max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
             {currentConversation?.title || generatedTitle || "New Chat"}
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <ModelSelector onModelChange={() => {}} />
           <ThemeToggle />
           <GithubLink />
@@ -211,13 +210,13 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
       )}
 
       {/* Messages */}
-      <div ref={contentRef} className="flex-1 overflow-hidden relative">
+      <div ref={contentRef} className="flex-1 overflow-hidden relative pb-16">
         <MessageList messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="p-2 flex justify-center mb-0">
-        <div className="w-full max-w-4xl mx-auto">
+      <div className="p-2 flex justify-center fixed bottom-8 left-0 right-0 z-10">
+        <div className="w-full max-w-4xl mx-auto px-2">
           <ChatInput input={input} setInput={setInput} handleSubmit={handleSubmit} isLoading={isLoading} />
         </div>
       </div>

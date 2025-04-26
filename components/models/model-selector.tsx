@@ -42,13 +42,13 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
           theme === "light"
             ? "bg-gradient-to-r from-indigo-100 to-blue-100 text-blue-700 border-blue-200 dark:from-blue-900 dark:to-indigo-900 dark:text-blue-300 dark:border-blue-800"
             : "bg-gradient-to-r from-blue-900 to-indigo-900 text-blue-300 border-blue-800"
-        } backdrop-blur-sm rounded-xl`}
+        } backdrop-blur-sm rounded-xl text-xs md:text-sm px-2 md:px-3`}
       >
-        <span className="flex items-center gap-2 text-sm">
+        <span className="flex items-center gap-1 md:gap-2">
           <span className="w-2 h-2 rounded-full bg-green-500"></span>
-          {selectedModel.name}
+          <span className="truncate">{selectedModel.name}</span>
         </span>
-        <ChevronDown size={16} className={cn("transition-transform", isOpen ? "rotate-180" : "")} />
+        <ChevronDown size={16} className={cn("transition-transform ml-1", isOpen ? "rotate-180" : "")} />
       </Button>
 
       <AnimatePresence>
@@ -58,7 +58,7 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute z-10 w-full md:w-64 mt-1 rounded-xl border border-blue-200 dark:border-blue-900 bg-white dark:bg-gray-800 shadow-lg overflow-hidden"
+            className="absolute right-0 z-40 w-48 md:w-64 mt-1 rounded-xl border border-blue-200 dark:border-blue-900 bg-white dark:bg-gray-800 shadow-lg overflow-hidden"
           >
             <div className="py-1">
               {availableModels.map((model) => (
