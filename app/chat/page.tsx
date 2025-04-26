@@ -39,14 +39,14 @@ function ChatContainer() {
   }
 
   return (
-    <div className="flex flex-col h-screen transition-colors duration-300">
+    <div className="flex flex-col h-screen transition-colors duration-300 overflow-hidden">
       <AnimatedBackground />
 
       {/* Main content with sidebar and chat */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-        <div className="flex-1 h-full">
+        <div className="flex-1 h-full w-full">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={selectedModel.id} // Triggers animation when the model changes
@@ -54,7 +54,7 @@ function ChatContainer() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="h-full"
+              className="h-full w-full"
             >
               <ChatWindow key={key} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
             </motion.div>
