@@ -1,26 +1,27 @@
 "use client"
 
-import { SendIcon } from "lucide-react"
+import { SendIcon, StopCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import type { FormEvent, KeyboardEvent } from "react"
 import { motion } from "framer-motion"
 import { useState, useRef, useEffect } from "react"
 import { UploadButton } from "./UploadButton"
-import { MultiImagePreview } from "./ImagePreview"
+import { MultiFilePreview } from "./FilePreview"
 
 interface ChatInputProps {
   input: string
   setInput: (input: string) => void
-  handleSubmit: (e: FormEvent, imageFiles?: File[] | null) => Promise<void>
+  handleSubmit: (e: FormEvent, files?: File[] | null) => Promise<void>
   isLoading: boolean
+  onStopGeneration: () => void
 }
 
-// NOTE: Maximum number of images allowed per message
-const MAX_IMAGES = 3
+// NOTE: Maximum number of files allowed per message
+const MAX_FILES = 3
 
-export function ChatInput({ input, setInput, handleSubmit, isLoading }: ChatInputProps) {
-  const [images, setImages] = useState<File[]>([])
+export function ChatInput({ input, setInput, handleSubmit, isLoading, onStopGeneration }: ChatInputProps) {
+  const [files, setFiles] = useState<File[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Auto-resize textarea based on content
@@ -31,17 +32,17 @@ export function ChatInput({ input, setInput, handleSubmit, isLoading }: ChatInpu
     }
   }, [input])
 
-  // NOTE: Adds an image if under limit
-  const addImage = (file: File) => {
-    if (images.length < MAX_IMAGES) {
-      setImages((prev) => [...prev, file])
+  // NOTE: Adds files if under limit
+  const addFile = (file: File) => {
+    if (files.length < MAX_FILES) {
+      setFiles((prev) => [...prev, file])
     }
-    // WARNING: Exceeding the image limit will silently do nothing
+    // WARNING: Exceeding the file limit will silently do nothing
   }
 
-  // NOTE: Removes image by index from the images array
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index))
+  // NOTE: Removes file by index from the files array
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   // Handle keyboard events for textarea
@@ -50,10 +51,10 @@ export function ChatInput({ input, setInput, handleSubmit, isLoading }: ChatInpu
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
 
-      if (input.trim() || images.length > 0) {
+      if (input.trim() || files.length > 0) {
         const formEvent = e.nativeEvent as unknown as FormEvent
-        handleSubmit(formEvent, images.length > 0 ? images : null)
-        setImages([])
+        handleSubmit(formEvent, files.length > 0 ? files : null)
+        setFiles([])
       }
     }
   }
@@ -62,47 +63,59 @@ export function ChatInput({ input, setInput, handleSubmit, isLoading }: ChatInpu
     <motion.form
       onSubmit={(e) => {
         e.preventDefault()
-        handleSubmit(e, images.length > 0 ? images : null)
-        setImages([])
+        if (isLoading) {
+          onStopGeneration()
+        } else {
+          handleSubmit(e, files.length > 0 ? files : null)
+          setFiles([])
+        }
       }}
-      className="flex w-full gap-2 bg-white/80 dark:bg-blue-900/80 backdrop-blur-md rounded-2xl p-2 shadow-md border border-blue-100 dark:border-blue-800/50 mb-2"
+      className="flex flex-col w-full bg-white/80 dark:bg-blue-900/80 backdrop-blur-md rounded-2xl p-2 shadow-md border border-blue-100 dark:border-blue-800/50 mb-2 relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex flex-col flex-1 gap-2">
-        <Textarea
-          ref={textareaRef}
-          placeholder="Type your message..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl text-blue-800 dark:text-blue-200 placeholder:text-blue-400 dark:placeholder:text-blue-500 min-h-[40px] max-h-[200px] resize-none overflow-y-auto"
-          rows={1}
-        />
-        {images.length > 0 && (
-          <div className="max-h-24 overflow-y-auto">
-            <MultiImagePreview files={images} onRemove={removeImage} />
-          </div>
-        )}
-      </div>
+      {files.length > 0 && (
+        <div className="absolute bottom-full mb-2 left-0 right-0 px-1 z-10">
+          <MultiFilePreview files={files} onRemove={removeFile} />
+        </div>
+      )}
 
-      <UploadButton onFile={addImage} maxImages={MAX_IMAGES} currentCount={images.length} />
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <Textarea
+            ref={textareaRef}
+            placeholder="Type your message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl text-blue-800 dark:text-blue-200 placeholder:text-blue-400 dark:placeholder:text-blue-500 min-h-[40px] max-h-[200px] resize-none overflow-y-auto"
+            rows={1}
+            disabled={isLoading}
+          />
+        </div>
 
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      >
-        <Button
-          type="submit"
-          disabled={isLoading || (!input.trim() && images.length === 0)}
-          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-300 rounded-xl h-10 w-10 p-0 text-white"
+        <UploadButton onFile={addFile} maxFiles={MAX_FILES} currentCount={files.length} disabled={isLoading} />
+
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          <SendIcon className="h-4 w-4" />
-          <span className="sr-only">Send</span>
-        </Button>
-      </motion.div>
+          <Button
+            type="submit"
+            disabled={isLoading ? false : !input.trim() && files.length === 0}
+            className={`${
+              isLoading
+                ? "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600"
+                : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+            } transition-colors duration-300 rounded-xl h-10 w-10 p-0 text-white`}
+          >
+            {isLoading ? <StopCircle className="h-4 w-4" /> : <SendIcon className="h-4 w-4" />}
+            <span className="sr-only">{isLoading ? "Stop" : "Send"}</span>
+          </Button>
+        </motion.div>
+      </div>
     </motion.form>
   )
 }

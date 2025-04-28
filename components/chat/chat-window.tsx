@@ -27,6 +27,7 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
   const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Use messages from current conversation
   const messages = currentConversation?.messages || []
@@ -57,33 +58,42 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
     }
   }, [messages, currentConversation, selectedModel, updateConversationTitle, setGeneratedTitle])
 
-  const handleSubmit = async (e: React.FormEvent, imageFiles?: File[] | null) => {
+  const stopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+      setIsLoading(false)
+
+      // Add an empty assistant message when generation is stopped
+      if (currentConversation) {
+        const emptyAssistantMessage: Message = {
+          id: Date.now().toString(),
+          content: "",
+          role: "assistant",
+          images: function (images: any): unknown {
+            throw new Error("Function not implemented.")
+          }
+        }
+
+        updateConversationMessages([...messages, emptyAssistantMessage])
+      }
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent, files?: File[] | null) => {
     e.preventDefault()
-    if ((!input.trim() && !imageFiles?.length) || isLoading || !currentConversation) return
+    if ((!input.trim() && !files?.length) || isLoading || !currentConversation) return
 
     setError(null)
 
-    let imageData = null
-    let imagesData = null
+    let fileData = null
+    let filesData = null
 
-    if (imageFiles && imageFiles.length === 1) {
-      // NOTE: Maintain compatibility with the previous format for a single image
-      const file = imageFiles[0]
-      imageData = await new Promise<{ base64: string; mimeType: string }>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-          const result = reader.result as string
-          const base64 = result.split(",")[1]
-          resolve({ base64, mimeType: file.type })
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
-    } else if (imageFiles && imageFiles.length > 1) {
-      // NOTE: Process multiple images
-      imagesData = await Promise.all(
-        imageFiles.map(async (file) => {
-          return new Promise<{ id: string; base64: string; mimeType: string }>((resolve, reject) => {
+    if (files && files.length > 0) {
+      // Process files (images, documents, or audio)
+      filesData = await Promise.all(
+        files.map(async (file) => {
+          return new Promise<{ id: string; base64: string; mimeType: string; fileName?: string }>((resolve, reject) => {
             const reader = new FileReader()
             reader.onload = () => {
               const result = reader.result as string
@@ -92,6 +102,7 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
                 id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
                 base64,
                 mimeType: file.type,
+                fileName: file.name, // Include the file name for documents and audio
               })
             }
             reader.onerror = reject
@@ -99,20 +110,24 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
           })
         }),
       )
+
+      // For backward compatibility, if there's only one file, also set it as fileData
+      if (files.length === 1) {
+        fileData = {
+          id: filesData[0].id,
+          base64: filesData[0].base64,
+          mimeType: filesData[0].mimeType,
+          fileName: filesData[0].fileName,
+        }
+      }
     }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       content: input,
       role: "user",
-      image: imageData
-        ? {
-            id: Date.now().toString(),
-            base64: imageData.base64,
-            mimeType: imageData.mimeType,
-          }
-        : undefined,
-      images: imagesData || undefined,
+      image: fileData,
+      files: filesData,
     }
 
     const updatedMessages = [...messages, userMessage]
@@ -121,14 +136,18 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
     setIsLoading(true)
 
     try {
-      // NOTE: Prepare messages for the API
+      // Create a new AbortController for this request
+      abortControllerRef.current = new AbortController()
+      const signal = abortControllerRef.current.signal
+
+      // Prepare messages for the API
       const apiMessages = updatedMessages.map((msg) => {
-        // NOTE: If the message has multiple images, convert them to the format expected by the API
-        if (msg.images && msg.images.length > 0) {
+        // If the message has multiple files, convert them to the format expected by the API
+        if (msg.files && msg.files.length > 0) {
           return {
             ...msg,
-            // NOTE: Convert the array of images to a format that the API can handle
-            image: msg.images[0], // Currently, only the first image is used for compatibility
+            // Convert the array of files to a format that the API can handle
+            image: msg.files[0], // Currently, only the first file is used for compatibility
           }
         }
         return msg
@@ -141,6 +160,7 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
           messages: apiMessages,
           model: selectedModel.id,
         }),
+        signal, // Pass the abort signal to the fetch request
       })
 
       const data = await response.json()
@@ -153,11 +173,19 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
         content: data.text,
         role: "assistant",
         image: data.image || undefined,
+        images: function (images: any): unknown {
+          throw new Error("Function not implemented.")
+        }
       }
 
       updateConversationMessages([...updatedMessages, assistantMessage])
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error)
+
+      // Don't show error message if the request was aborted
+      if (error.name === "AbortError") {
+        return
+      }
 
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
       setError(errorMessage)
@@ -166,11 +194,15 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
         id: Date.now().toString(),
         content: "Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.",
         role: "assistant",
+        images: function (images: any): unknown {
+          throw new Error("Function not implemented.")
+        }
       }
 
       updateConversationMessages([...updatedMessages, errorResponse])
     } finally {
       setIsLoading(false)
+      abortControllerRef.current = null
     }
   }
 
@@ -210,14 +242,20 @@ export function ChatWindow({ isSidebarOpen, setIsSidebarOpen }: ChatWindowProps)
       )}
 
       {/* Messages */}
-      <div ref={contentRef} className="flex-1 overflow-hidden relative pb-16">
+      <div ref={contentRef} className="flex-1 overflow-hidden relative">
         <MessageList messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
-      </div>
 
-      {/* Input */}
-      <div className="p-2 flex justify-center fixed bottom-8 left-0 right-0 z-10">
-        <div className="w-full max-w-4xl mx-auto px-2">
-          <ChatInput input={input} setInput={setInput} handleSubmit={handleSubmit} isLoading={isLoading} />
+        {/* Input - now part of the normal flow, will be pushed by sidebar just like messages */}
+        <div className="flex justify-center pb-10 pt-2">
+          <div className="w-full max-w-4xl mx-auto px-4">
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              handleSubmit={handleSubmit}
+              isLoading={isLoading}
+              onStopGeneration={stopGeneration}
+            />
+          </div>
         </div>
       </div>
     </div>
