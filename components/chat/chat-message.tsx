@@ -184,7 +184,7 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
                               {copied ? <CheckIcon size={14} /> : <Copy size={14} />}
                             </Button>
                           </div>
-                          <div className="overflow-x-auto" style={{ maxWidth: "600px" }}>
+                          <div className="overflow-x-auto" style={{ maxWidth: "100%", width: "100%" }}>
                             <SyntaxHighlighter
                               style={isDarkMode ? PrismNaharaDark : PrismNaharaLight}
                               language={match[1]}
@@ -195,6 +195,8 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
                                 margin: 0,
                                 background: "transparent",
                                 padding: "1rem",
+                                minWidth: "100%",
+                                width: "auto",
                               }}
                               wrapLongLines={false}
                               {...props}
