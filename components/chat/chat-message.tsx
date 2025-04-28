@@ -1,12 +1,12 @@
 "use client"
 
-import { UserIcon, Copy, CheckIcon } from "lucide-react"
+import { UserIcon, Copy, CheckIcon, FileText, Music } from "lucide-react"
 import type { Message } from "@/types/chat"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useModel } from "@/contexts/model-context"
 import ReactMarkdown from "react-markdown"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { useTheme } from "@/contexts/theme-context"
@@ -25,11 +25,77 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
   const { selectedModel } = useModel()
   const iconAI = <img src="/NaharaAI.png" alt="Nahara AI Logo" className="w-7 h-7 rounded-full " />
   const [copied, setCopied] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(message.content)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.play()
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
+
+  // Helper function to render a file preview
+  const renderFilePreview = (file: any, idx?: number) => {
+    if (!file || !file.mimeType) return null
+
+    if (file.mimeType.startsWith("image/")) {
+      return (
+        <img
+          key={idx}
+          src={`data:${file.mimeType};base64,${file.base64}`}
+          alt={file.fileName || "Image"}
+          className="mb-2 rounded max-w-xs max-h-60 object-contain border border-blue-200 dark:border-blue-800 shadow"
+        />
+      )
+    } else if (file.mimeType === "application/pdf") {
+      return (
+        <div
+          key={idx}
+          className="mb-2 p-3 bg-blue-200/50 dark:bg-blue-900/50 rounded-lg flex items-center gap-2 border border-blue-300 dark:border-blue-700"
+        >
+          <FileText className="h-8 w-8 text-blue-700 dark:text-blue-300" />
+          <div>
+            <p className="font-medium text-blue-800 dark:text-blue-200">{file.fileName || "Document.pdf"}</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400">PDF Document</p>
+          </div>
+        </div>
+      )
+    } else if (file.mimeType.startsWith("audio/")) {
+      return (
+        <div
+          key={idx}
+          className="mb-2 p-3 bg-purple-200/50 dark:bg-purple-900/50 rounded-lg border border-purple-300 dark:border-purple-700 w-full"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Music className="h-6 w-6 text-purple-700 dark:text-purple-300" />
+            <div>
+              <p className="font-medium text-purple-800 dark:text-purple-200">{file.fileName || "Audio file"}</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400">Audio</p>
+            </div>
+          </div>
+          <audio
+            src={`data:${file.mimeType};base64,${file.base64}`}
+            controls
+            className="w-full"
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => setIsPlaying(false)}
+          />
+        </div>
+      )
+    }
+    return null
   }
 
   return (
@@ -64,98 +130,95 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
           >
             {isUser ? "Tú" : "Nahara"}
           </div>
-          <div
-            className={cn(
-              "p-3 rounded-2xl max-w-[90%]",
-              isUser
-                ? "bg-blue-100 dark:bg-blue-800/50 text-blue-950 dark:text-blue-100 inline-block float-right"
-                : "text-blue-950 dark:text-blue-100",
-            )}
-          >
-            {message.image && message.image.base64 && message.image.mimeType && (
-              <img
-                src={`data:${message.image.mimeType};base64,${message.image.base64}`}
-                alt="User upload"
-                className="mb-2 rounded max-w-xs max-h-60 object-contain border border-blue-200 dark:border-blue-800 shadow"
-              />
-            )}
-            {Array.isArray(message.images) && message.images.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {message.images.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={`data:${img.mimeType};base64,${img.base64}`}
-                    alt={`User upload ${idx + 1}`}
-                    className="rounded max-w-xs max-h-60 object-contain border border-blue-200 dark:border-blue-800 shadow"
-                  />
-                ))}
-              </div>
-            )}
+          {/* Only render the message content if there is content */}
+          {(isUser || message.content) && (
+            <div
+              className={cn(
+                "p-3 rounded-2xl max-w-[90%]",
+                isUser
+                  ? "bg-blue-100 dark:bg-blue-800/50 text-blue-950 dark:text-blue-100 inline-block float-right"
+                  : "text-blue-950 dark:text-blue-100",
+              )}
+            >
+              {/* Display single file if present */}
+              {message.image && renderFilePreview(message.image)}
 
-            {isUser ? (
-              <p>{message.content}</p>
-            ) : (
-              <ReactMarkdown
-                components={{
-                  code({ node, inline, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || "")
+              {/* Display multiple files */}
+              {Array.isArray(message.files) && message.files.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {message.files.map((file, idx) => renderFilePreview(file, idx))}
+                </div>
+              )}
 
-                    const copyToClipboard = () => {
-                      const codeText = String(children).replace(/\n$/, "")
-                      navigator.clipboard.writeText(codeText)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 2000)
-                    }
+              {isUser ? (
+                <p>{message.content}</p>
+              ) : (
+                <ReactMarkdown
+                  components={{
+                    code({ node, inline, className, children, ...props }) {
+                      const match = /language-(\w+)/.exec(className || "")
 
-                    return !inline && match ? (
-                      <div className="mb-4 border rounded-xl overflow-hidden shadow-sm bg-white dark:bg-[#0c1027]">
-                        <div className="flex justify-between items-center px-4  bg-[#e8ecff] dark:bg-[#121E58] text-sm text-blue-800 dark:text-blue-100 font-medium border-b dark:border-blue-800">
-                          <span className="capitalize">{match[1]}</span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={copyToClipboard}
-                            className={cn(
-                              "text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full",
-                              copied && "text-green-600 dark:text-green-400",
-                            )}
-                          >
-                            {copied ? <CheckIcon size={14} /> : <Copy size={14} />}
-                          </Button>
+                      const copyToClipboard = () => {
+                        const codeText = String(children).replace(/\n$/, "")
+                        navigator.clipboard.writeText(codeText)
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      }
+
+                      return !inline && match ? (
+                        <div
+                          className="mb-4 border rounded-xl overflow-hidden shadow-sm bg-white dark:bg-[#0c1027]"
+                          style={{ maxWidth: "100%" }}
+                        >
+                          <div className="flex justify-between items-center px-4 bg-[#e8ecff] dark:bg-[#121E58] text-sm text-blue-800 dark:text-blue-100 font-medium border-b dark:border-blue-800">
+                            <span className="capitalize">{match[1]}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={copyToClipboard}
+                              className={cn(
+                                "text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full",
+                                copied && "text-green-600 dark:text-green-400",
+                              )}
+                            >
+                              {copied ? <CheckIcon size={14} /> : <Copy size={14} />}
+                            </Button>
+                          </div>
+                          <div className="overflow-x-auto" style={{ maxWidth: "600px" }}>
+                            <SyntaxHighlighter
+                              style={isDarkMode ? PrismNaharaDark : PrismNaharaLight}
+                              language={match[1]}
+                              PreTag="div"
+                              showLineNumbers
+                              customStyle={{
+                                fontFamily: "Cascadia Code, ui-monospace, monospace",
+                                margin: 0,
+                                background: "transparent",
+                                padding: "1rem",
+                              }}
+                              wrapLongLines={false}
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, "")}
+                            </SyntaxHighlighter>
+                          </div>
                         </div>
-                        <div className="overflow-auto">
-                          <SyntaxHighlighter
-                            style={isDarkMode ? PrismNaharaDark : PrismNaharaLight}
-                            language={match[1]}
-                            PreTag="div"
-                            showLineNumbers
-                            customStyle={{
-                              fontFamily: "Cascadia Code, ui-monospace, monospace",
-                              margin: 0,
-                              background: "transparent",
-                              padding: "1rem",
-                            }}
-                            {...props}
-                          >
-                            {String(children).replace(/\n$/, "")}
-                          </SyntaxHighlighter>
-                        </div>
-                      </div>
-                    ) : (
-                      <code className="bg-muted px-1 py-0.5 rounded text-sm" {...props}>
-                        {children}
-                      </code>
-                    )
-                  },
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
-            )}
-          </div>
+                      ) : (
+                        <code className="bg-muted px-1 py-0.5 rounded text-sm" {...props}>
+                          {children}
+                        </code>
+                      )
+                    },
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              )}
+            </div>
+          )}
         </div>
 
-        {!isUser && (
+        {!isUser && message.content && (
           <Button
             size="sm"
             variant="ghost"

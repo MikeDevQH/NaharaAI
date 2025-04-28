@@ -4,4 +4,5 @@ export interface ChatImage {
   url?: string;
   base64?: string;
   mimeType?: string;
+  fileName?: string;
 }

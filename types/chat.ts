@@ -5,6 +5,7 @@ export interface Message {
   id: string;
   content: string;
   role: "user" | "assistant";
-  image?: ChatImage;
+  image?: ChatImage & { fileName?: string }
+  files?: Array<ChatImage & { fileName?: string }>
 }
 

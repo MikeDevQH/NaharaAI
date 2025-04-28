@@ -31,7 +31,7 @@ export function MessageList({ messages, isLoading, messagesEndRef }: MessageList
     <div
       ref={containerRef}
       className={`h-full space-y-4 md:space-y-6 scrollbar-custom transition-all duration-300 ${
-        showMessages ? "overflow-auto p-2 md:px-2 md:py-4 pt-4 md:pt-8" : "overflow-hidden p-0"
+        showMessages ? "overflow-auto p-2 md:px-2 md:py-4 pt-16 md:pt-20" : "overflow-hidden p-0"
       }`}
     >
       {showMessages ? (
