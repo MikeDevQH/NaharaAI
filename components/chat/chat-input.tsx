@@ -77,9 +77,10 @@ export function ChatInput({
       e.preventDefault();
 
       if (input.trim() || files.length > 0) {
-        const formEvent = e.nativeEvent as unknown as FormEvent;
-        handleSubmit(formEvent, files.length > 0 ? files : null);
-        setFiles([]);
+        const formEvent = e.nativeEvent as unknown as FormEvent
+        handleSubmit(formEvent, files.length > 0 ? files : null).then(() => {
+          setFiles([])
+        })
       }
     }
   };
@@ -91,8 +92,9 @@ export function ChatInput({
         if (isLoading) {
           onStopGeneration();
         } else {
-          handleSubmit(e, files.length > 0 ? files : null);
-          setFiles([]);
+          handleSubmit(e, files.length > 0 ? files : null).then(() => {
+            setFiles([]);
+          })
         }
       }}
       className="flex flex-col w-full bg-white/80 dark:bg-blue-900/80 backdrop-blur-md rounded-2xl p-2 shadow-md border border-blue-100 dark:border-blue-800/50 mb-2 relative"
@@ -121,7 +123,8 @@ export function ChatInput({
 
         {/* Only show upload button if model supports images, documents or audio */}
         {(selectedModel.capabilities.images ||
-          selectedModel.capabilities.documents) && (
+          selectedModel.capabilities.documents ||
+          selectedModel.capabilities.audio) && (
           <UploadButton
             onFile={addFile}
             maxFiles={MAX_FILES}

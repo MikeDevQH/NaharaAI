@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GithubLink } from "@/components/ui/github-link";
 import { ModelSelector } from "@/components/models/model-selector";
+import { toast } from "@/components/ui/use-toast";
 
 interface ChatWindowProps {
   isSidebarOpen: boolean;
@@ -35,7 +36,6 @@ export function ChatWindow({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const [isAborted, setIsAborted] = useState(false);
 
   // Use messages from current conversation
   const messages = currentConversation?.messages || [];
@@ -76,8 +76,6 @@ export function ChatWindow({
   const stopGeneration = () => {
     if (abortControllerRef.current) {
       try {
-        // Mark as aborted before calling abort()
-        setIsAborted(true);
         abortControllerRef.current.abort();
       } catch (error) {
         console.error("Error al abortar la solicitud:", error);
@@ -107,7 +105,6 @@ export function ChatWindow({
 
     // Reset states
     setError(null);
-    setIsAborted(false);
 
     let fileData = null;
     let filesData = null;
@@ -158,6 +155,7 @@ export function ChatWindow({
       role: "user",
       image: fileData,
       files: filesData,
+      images: undefined,
     };
 
     const updatedMessages = [...messages, userMessage];
@@ -165,11 +163,11 @@ export function ChatWindow({
     setInput("");
     setIsLoading(true);
 
+    // Create a new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     try {
-      // Create a new AbortController for this request
-      abortControllerRef.current = new AbortController();
-      const signal = abortControllerRef.current.signal;
-
       // Prepare messages for the API
       const apiMessages = updatedMessages.map((msg) => {
         // If the message has multiple files, convert them to the format expected by the API
@@ -177,7 +175,7 @@ export function ChatWindow({
           return {
             ...msg,
             // Convert the array of files to a format that the API can handle
-            image: msg.files[0], // Currently, only the first file is used for compatibility
+            image: msg.files[0], 
           };
         }
         return msg;
@@ -193,21 +191,19 @@ export function ChatWindow({
         signal, // Pass the abort signal to the fetch request
       });
 
-      // Si la solicitud fue abortada, no procesamos la respuesta
-      if (isAborted) {
-        return;
+       // If the response is not successful, throw an error
+       if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error communicating with API")
       }
 
-      // Procesamos la respuesta solo si no fue abortada
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Error communicating with API");
-      }
+      // Process the response
+      const data = await response.json()
 
       if (!data.text && !data.error) {
-        throw new Error("Response does not contain text");
+        throw new Error("Response does not contain text")
       }
+
 
       const assistantMessage: Message = {
         id: Date.now().toString(),
@@ -221,18 +217,24 @@ export function ChatWindow({
     } catch (error: any) {
       console.error("Error:", error);
 
-      if (error.name === "AbortError" || isAborted) {
-        return;
+      if (error.name === "AbortError") {
+        console.log("Request was aborted intentionally")
+        return
       }
 
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown error"
       setError(errorMessage);
+
+      // Mostrar toast de error
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
     } finally {
-      if (!isAborted) {
-        setIsLoading(false);
-        abortControllerRef.current = null;
-      }
+      setIsLoading(false)
+      abortControllerRef.current = null
     }
   };
 
