@@ -39,7 +39,13 @@ export async function POST(request: Request) {
       .filter((msg) => msg.id !== lastUserMessage.id)
       .map((msg) => {
         const parts = [];
-        if (msg.image && msg.image.base64 && msg.image.mimeType) {
+        // Only include image if the model supports images
+        if (
+          msg.image &&
+          msg.image.base64 &&
+          msg.image.mimeType &&
+          modelConfig.capabilities.images
+        ) {
           parts.push({
             inlineData: {
               mimeType: msg.image.mimeType,
@@ -56,10 +62,12 @@ export async function POST(request: Request) {
         };
       });
     const userParts = [];
+    // Only include image if the model supports images
     if (
       lastUserMessage.image &&
       lastUserMessage.image.base64 &&
-      lastUserMessage.image.mimeType
+      lastUserMessage.image.mimeType &&
+      modelConfig.capabilities.images
     ) {
       userParts.push({
         inlineData: {
@@ -90,8 +98,10 @@ User: ${userContent}`;
     // TODO: If an image is present and the user requests detection or segmentation, modify prompt accordingly
     let prompt = lastUserMessage.content;
     let isDetection = false;
+    // Only attempt detection if the model supports images
     if (
       lastUserMessage.image &&
+      modelConfig.capabilities.images &&
       /box|detect|object|segment|mask|cuadro|diferencias|diferente|bounding|segmenta|segmentation/i.test(
         prompt
       )
@@ -102,6 +112,7 @@ User: ${userContent}`;
     }
     if (
       lastUserMessage.image &&
+      modelConfig.capabilities.images &&
       /segment|mask|segmenta|segmentación|contorno/i.test(prompt)
     ) {
       // NOTE: Add segmentation instruction for masks and labels
@@ -109,92 +120,95 @@ User: ${userContent}`;
       isDetection = true;
     }
 
-    const result = await model.generateContent({
-      contents: [
-        ...conversationHistory,
-        {
-          role: "user",
-          parts: [
-            ...(lastUserMessage.image &&
-            lastUserMessage.image.base64 &&
-            lastUserMessage.image.mimeType
-              ? [
-                  {
-                    inlineData: {
-                      mimeType: lastUserMessage.image.mimeType,
-                      data: lastUserMessage.image.base64,
-                    },
+    // Prepare the content for the API request based on model capabilities
+    const contents = [
+      ...conversationHistory,
+      {
+        role: "user",
+        parts: [
+          ...(lastUserMessage.image &&
+          lastUserMessage.image.base64 &&
+          lastUserMessage.image.mimeType &&
+          modelConfig.capabilities.images
+            ? [
+                {
+                  inlineData: {
+                    mimeType: lastUserMessage.image.mimeType,
+                    data: lastUserMessage.image.base64,
                   },
-                ]
-              : []),
-            { text: enhancedContent },
-          ],
-        },
-      ],
-    });
-
-    if (isDetection) {
-      // NOTE: Handle detection/segmentation response separately
-      const detectionResult =
-        result.response.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!detectionResult)
-        throw new Error("Detection response does not contain text");
-      return NextResponse.json({ text: detectionResult });
-    }
-
-    const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error("Response does not contain text");
-
-    return NextResponse.json({ text });
-  } catch (modelError) {
-    console.error("Model-specific error:", modelError);
+                },
+              ]
+            : []),
+          { text: enhancedContent },
+        ],
+      },
+    ];
 
     try {
-      const { messages, model: modelId = "gemini-2.0-flash" } =
-        await request.json();
-      const fallbackModelConfig = getFallbackModel(modelId);
+      const result = await model.generateContent({
+        contents: contents,
+      });
 
-      const lastUserMessage = [...messages]
-        .reverse()
-        .find((msg) => msg.role === "user");
-      if (!lastUserMessage) throw new Error("No user message found");
+      if (isDetection && modelConfig.capabilities.images) {
+        // NOTE: Handle detection/segmentation response separately
+        const detectionResult =
+          result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!detectionResult)
+          throw new Error("Detection response does not contain text");
+        return NextResponse.json({ text: detectionResult });
+      }
 
-      const userContent = lastUserMessage.content;
-      const enhancedContent = `${fallbackModelConfig.systemPrompt}
+      const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error("Response does not contain text");
+
+      return NextResponse.json({ text });
+    } catch (modelError) {
+      console.error("Model-specific error:", modelError);
+
+      // Try with fallback model
+      try {
+        const fallbackModelConfig = getFallbackModel(modelId);
+
+        const userContent = lastUserMessage.content;
+        const enhancedContent = `${fallbackModelConfig.systemPrompt}
 
 User: ${userContent}`;
 
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("Gemini API Key is missing");
+        const model = genAI.getGenerativeModel({
+          model: fallbackModelConfig.id,
+          generationConfig: fallbackModelConfig.generationConfig,
+        });
 
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
-        model: fallbackModelConfig.id,
-        generationConfig: fallbackModelConfig.generationConfig,
-      });
+        // Note: Fallback doesn't include images even if the model supports them
+        const result = await model.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: enhancedContent }],
+            },
+          ],
+        });
 
-      const result = await model.generateContent({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: enhancedContent }],
-          },
-        ],
-      });
+        const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("Fallback response does not contain text");
 
-      const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error("Fallback response does not contain text");
-
-      return NextResponse.json({
-        text,
-        warning: `The fallback model ${fallbackModelConfig.name} was used because the original model failed.`,
-      });
-    } catch (fallbackError) {
-      console.error("Fallback model error:", fallbackError);
-      return NextResponse.json(
-        { error: "Could not generate response with any available model" },
-        { status: 500 }
-      );
+        return NextResponse.json({
+          text,
+          warning: `The fallback model ${fallbackModelConfig.name} was used because the original model failed.`,
+        });
+      } catch (fallbackError) {
+        console.error("Fallback model error:", fallbackError);
+        return NextResponse.json(
+          { error: "Could not generate response with any available model" },
+          { status: 500 }
+        );
+      }
     }
+  } catch (error) {
+    console.error("General error:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }
