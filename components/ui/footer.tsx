@@ -1,53 +1,60 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { GithubIcon, Mail, Heart, Star, Info, FileText } from "lucide-react"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { GithubIcon, Mail, Heart, Star, Info, FileText } from "lucide-react";
+import Link from "next/link";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear()
-  const [showEasterEgg, setShowEasterEgg] = useState(false)
-  const [theme, setTheme] = useState<string>("light")
+  const currentYear = new Date().getFullYear();
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
+  const [theme, setTheme] = useState<string>("light");
 
   // Detect current theme
   useEffect(() => {
     const checkTheme = () => {
       if (document.documentElement.classList.contains("dark")) {
-        setTheme("dark")
+        setTheme("dark");
       } else {
-        setTheme("light")
+        setTheme("light");
       }
-    }
+    };
 
     // Check initially
-    checkTheme()
+    checkTheme();
 
     // Set up a mutation observer to detect changes to the 'dark' class
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === "attributes" && mutation.attributeName === "class") {
-          checkTheme()
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "class"
+        ) {
+          checkTheme();
         }
-      })
-    })
+      });
+    });
 
-    observer.observe(document.documentElement, { attributes: true })
+    observer.observe(document.documentElement, { attributes: true });
 
     return () => {
-      observer.disconnect()
-    }
-  }, [])
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <footer
-      className={`w-full bg-gradient-to-r from-blue-900/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-md text-white py-1 px-2 md:px-4 shadow-md z-10 border-t border-blue-800/30 fixed bottom-0 left-0 right-0 h-8`}
+      className={`w-full bg-gradient-to-r from-blue-900/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-md text-white py-1 px-2 md:px-4 shadow-md z-50 border-t border-blue-800/30 fixed bottom-0 left-0 right-0 h-8`}
     >
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           {/* Logo and copyright */}
           <div className="flex items-center space-x-2">
-            <img src="/NaharaAI.png" alt="Logo Nahara AI" className="w-4 h-4 rounded-full" />
+            <img
+              src="/NaharaAI.png"
+              alt="Logo Nahara AI"
+              className="w-4 h-4 rounded-full"
+            />
             <p className="font-medium">© {currentYear} Nahara AI</p>
           </div>
 
@@ -69,11 +76,17 @@ export function Footer() {
               <Mail className="h-3 w-3 mr-1" />
               <span>Contact</span>
             </a>
-            <Link href="/terms" className="flex items-center hover:text-blue-200 transition-colors duration-200">
+            <Link
+              href="/terms"
+              className="flex items-center hover:text-blue-200 transition-colors duration-200"
+            >
               <FileText className="h-3 w-3 mr-1" />
               <span>Terms</span>
             </Link>
-            <Link href="/about" className="flex items-center hover:text-blue-200 transition-colors duration-200">
+            <Link
+              href="/about"
+              className="flex items-center hover:text-blue-200 transition-colors duration-200"
+            >
               <Info className="h-3 w-3 mr-1" />
               <span>About</span>
             </Link>
@@ -104,5 +117,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
